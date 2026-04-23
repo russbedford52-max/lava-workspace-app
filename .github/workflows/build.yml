@@ -19,12 +19,12 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      - name: Create Cordova Project
+      - - name: Create Cordova Project
         run: |
           cordova create app com.lava.workspace "LavaWorkspace"
           rm -rf app/www/*
-          # Copy your index.html into the app container
-          cp index.html app/www/
+          # Grab the capital 'I' file and save it as lowercase 'i' for Cordova
+          cp Index.html app/www/index.html
 
       - name: Setup Java
         uses: actions/setup-java@v4
