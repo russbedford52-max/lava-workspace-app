@@ -1,0 +1,45 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch: # Allows you to trigger this build manually from the UI
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Cordova
+        run: npm install -g cordova
+
+      - name: Create Cordova Project
+        run: |
+          cordova create app com.lava.workspace "LavaWorkspace"
+          rm -rf app/www/*
+          # Copy your index.html into the app container
+          cp index.html app/www/
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build Android Platform
+        working-directory: ./app
+        run: |
+          cordova platform add android
+          cordova build android
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lava-Workspace-APK
+          path: app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
