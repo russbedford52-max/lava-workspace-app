@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Lava Unified Workspace</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Outfit:wght@300;400;600;800&family=Fira+Code:wght@400;600&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0b1220;
+      --bg2: #111827;
+      --panel: #182235;
+      --panel2: #0f172a;
+      --card: #1e293b;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --border: rgba(255,255,255,0.08);
+      --accent: #f97316;
+      --accent2: #be123c;
+      --accent3: #4361ee;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --cyan: #22d3ee;
+      --purple: #a855f7;
+      --pink: #ec4899;
+      --blue: #3b82f6;
+      --radius: 18px;
+      --shadow: 0 20px 40px rgba(0,0,0,.38);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: 'Outfit', sans-serif;
+      color: var(--text);
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(249,115,22,0.12), transparent 22%),
+        radial-gradient(circle at 85% 18%, rgba(190,18,60,0.10), transparent 24%),
+        radial-gradient(circle at 50% 100%, rgba(67,97,238,0.10), transparent 28%),
+        linear-gradient(180deg,#0a0f1d 0%,#101826 55%,#0b1220 100%);
+      touch-action: manipulation;
+    }
+
+    .premium-bg {
+      position: fixed; inset: 0; z-index: -2; pointer-events: none;
+      background:
+        radial-gradient(circle at 15% 50%, rgba(76,29,149,.14), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(219,39,119,.12), transparent 25%);
+      animation: pulseBg 10s ease-in-out infinite alternate;
+    }
+
+    .noise {
+      position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .08;
+      background-image:
+        linear-gradient(rgba(255,255,255,.03), rgba(255,255,255,.03)),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.8'/%3E%3C/svg%3E");
+    }
+
+    @keyframes pulseBg {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.08); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .fade-in { animation: fadeUp .35s ease-out both; }
+
+    .panel-3d {
+      background: linear-gradient(180deg, rgba(28,36,51,.96), rgba(14,20,31,.97));
+      border-top: 1px solid rgba(255,255,255,.1);
+      border-left: 1px solid rgba(255,255,255,.08);
+      border-right: 1px solid rgba(0,0,0,.45);
+      border-bottom: 1px solid rgba(0,0,0,.65);
+      border-radius: 18px;
+      box-shadow: 0 15px 30px rgba(0,0,0,.45), inset 0 2px 6px rgba(255,255,255,.03);
+    }
+
+    .glass-card {
+      background: rgba(15,23,42,.68);
+      border: 1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,.5);
+      transition: .25s ease;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(255,255,255,.16);
+      box-shadow: 0 0 30px rgba(139,92,246,.08);
+    }
+
+    .inset-screen {
+      background: #0b1120;
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: inset 0 10px 20px rgba(0,0,0,.6);
+    }
+
+    .chrome-metal {
+      background: linear-gradient(135deg,#e6e6e6 0%,#fff 20%,#a3a3a3 40%,#d1d1d1 60%,#fff 80%,#8c8c8c 100%);
+      border: 1px solid #777;
+      border-top: 2px solid #fff;
+      border-left: 2px solid #fff;
+      border-right: 2px solid #555;
+      border-bottom: 2px solid #555;
+      color: #111;
+      text-shadow: 1px 1px 0 rgba(255,255,255,.6);
+      font-weight: 800;
+    }
+
+    .btn-3d {
+      transition: transform .08s ease, box-shadow .08s ease, filter .2s ease;
+      box-shadow: 0 4px 0 #555, 0 8px 12px rgba(0,0,0,.3);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .btn-3d:active {
+      transform: translateY(4px);
+      box-shadow: 0 0 0 #555, 0 2px 4px rgba(0,0,0,.35);
+    }
+
+    .nav-tab {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      letter-spacing: .08em;
+      white-space: nowrap;
+    }
+
+    .nav-tab.active {
+      background: linear-gradient(135deg,var(--accent) 0%, var(--accent2) 100%);
+      color: #fff !important;
+      text-shadow: 0 2px 4px rgba(0,0,0,.4);
+      border-color: #ff9d5c;
+    }
+
+    .neon-title {
+      font-family: 'Dancing Script', cursive;
+      color: #fff;
+      text-shadow: 0 0 10px rgba(249,115,22,.45), 0 0 22px rgba(190,18,60,.28);
+    }
+
+    .text-gradient {
+      background: linear-gradient(135deg,#a855f7,#ec4899,#3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-size: 200% auto;
+      animation: shine 4s linear infinite;
+    }
+
+    @keyframes shine {
+      to { background-position: 200% center; }
+    }
+
+    .premium-input, .search-input, textarea, input[type="text"], select {
+      width: 100%;
+      background: rgba(30,41,59,.68);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 14px;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    .premium-input:focus, .search-input:focus, textarea:focus, input[type="text"]:focus, select:focus {
+      border-color: rgba(168,85,247,.7);
+      box-shadow: 0 0 0 3px rgba(168,85,247,.12);
+      background: rgba(30,41,59,.9);
+    }
+
+    textarea {
+      min-height: 140px;
+      resize: vertical;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .workspace-editor {
+      min-height: 380px;
+      padding: 20px;
+      outline: none;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 1rem;
+      line-height: 1.6;
+      border-radius: 16px;
+      color: #dbeafe;
+    }
+
+    .workspace-editor:empty:before {
+      content: attr(data-placeholder);
+      color: #64748b;
+    }
+
+    .code-box {
+      font-family: 'Fira Code', monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .loader-ring {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 3px solid rgba(255,255,255,.12);
+      border-top-color: var(--pink);
+      animation: spin 1s linear infinite;
+    }
+
+    .mini-loader {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 4px solid #111;
+      border-top: 4px solid var(--accent);
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    .item-card {
+      background: rgba(30,41,59,.78);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding: 16px;
+      transition: .2s ease;
+    }
+
+    .item-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,.18);
+    }
+
+    .card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .action-link {
+      background: none;
+      border: none;
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0;
+    }
+
+    .action-link.primary { color: #60a5fa; }
+    .action-link.danger { color: #f87171; }
+
+    .stats-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 6px;
+    }
+
+    .hidden-view { display: none !important; }
+
+    .signature {
+      font-family: 'Dancing Script', cursive;
+      font-size: 1.2rem;
+      color: #60a5fa;
+      display: inline-block;
+      margin-top: 8px;
+    }
+
+    .tab-pane {
+      height: 100%;
+      overflow: auto;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(15,23,42,.96);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.12);
+      padding: 14px 18px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      z-index: 80;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .25s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(168,85,247,.5); border-radius: 999px; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .setup-grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 1.25rem;
+    }
+
+    .progress-ring {
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      background: conic-gradient(var(--accent3) var(--progress, 0%), rgba(255,255,255,.08) 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .progress-ring::before {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border-radius: 999px;
+      background: #182235;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,.45);
+    }
+
+    .progress-text {
+      position: relative;
+      z-index: 1;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .step-card.checked {
+      opacity: .62;
+      filter: grayscale(100%);
+    }
+
+    .checkbox-wrapper input {
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      background: #0b1120;
+      border: 2px solid #4b5563;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .checkbox-wrapper input:checked {
+      background: var(--accent3);
+      border-color: var(--accent3);
+    }
+
+    .checkbox-wrapper input:checked::after {
+      content: "✓";
+      position: absolute;
+      color: white;
+      font-weight: 800;
+      left: 5px;
+      top: 0px;
+      font-size: 14px;
+    }
+
+    .phone-frame {
+      width: 180px;
+      height: 360px;
+      border-radius: 28px;
+      position: relative;
+      background: linear-gradient(135deg,#333,#111);
+      border: 4px solid #555;
+      box-shadow: 0 20px 40px rgba(0,0,0,.65), inset 0 2px 6px rgba(255,255,255,.15);
+      overflow: hidden;
+      margin: 0 auto;
+    }
+
+    .phone-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 64px;
+      height: 16px;
+      background: #111;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+      z-index: 3;
+    }
+
+    .phone-screen {
+      position: absolute;
+      inset: 8px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: #0b1120;
+      padding: 16px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      color: #e2e8f0;
+    }
+
+    .copied {
+      border-color: rgba(34,197,94,.65)!important;
+      box-shadow: 0 0 0 3px rgba(34,197,94,.12);
+    }
+
+    @media (max-width:980px) {
+      body { overflow: auto; }
+      #app-shell { height: auto !important; min-height: 100vh; }
+      .tab-pane { height: auto; min-height: calc(100vh - 180px); }
+      .setup-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="premium-bg"></div>
+  <div class="noise"></div>
+
+  <div id="app-shell" class="flex flex-col h-screen">
+    <header class="shrink-0 px-4 md:px-6 py-4 border-b border-white/10 bg-black/20 backdrop-blur-md">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 class="text-3xl md:text-4xl neon-title">Lava Unified Workspace</h1>
+          <div class="text-[10px] md:text-xs uppercase tracking-[0.25em] text-slate-300 font-bold">Merged prompts · media · notes · DNA · sandbox · setup</div>
+        </div>
+
+        <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2">
+          <div class="glass-card rounded-2xl px-3 py-2 flex items-center gap-2">
+            <input id="globalSearch" type="text" placeholder="Search prompts, notes, templates..." class="bg-transparent border-0 outline-none text-sm text-white placeholder-slate-500 min-w-[220px]" />
+            <button class="chrome-metal btn-3d px-3 py-2 rounded-lg text-[10px]" onclick="app.filterGlobal()">Search</button>
+          </div>
+
+          <select id="brand-selector" class="chrome-metal rounded-full px-3 py-2 text-[11px]" onchange="app.saveBrandingPref()">
+            <option value="R.B Signature">R.B Signature</option>
+            <option value="R. Bedford IT Pro">R. Bedford IT Pro</option>
+            <option value="Copyright 2026 Russell Bedford">Copyright 2026</option>
+          </select>
+
+          <button id="work-mode-btn" class="chrome-metal btn-3d px-4 py-2 rounded-full text-[11px]" onclick="app.toggleWorkMode()">WORK MODE OFF</button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="shrink-0 px-4 md:px-6 py-3 flex gap-2 overflow-x-auto no-scrollbar border-b border-white/10 bg-slate-950/30">
+      <button id="tab-prompts" class="chrome-metal btn-3d nav-tab active px-4 py-2 rounded-lg" onclick="app.setView('prompts')">PROMPTS</button>
+      <button id="tab-media" class="chrome-metal btn-3d nav-tab px-4 py-2 rounded-lg" onclick="app.setView('media')">MEDIA MAKER</button>
+      <button id="tab-dna" class="chrome-metal btn-3d nav-tab px-4 py-2 rounded-lg" onclick="app.setView('dna')">DNA EXTRACT</button>
+      <button id="tab-notes" class="chrome-metal btn-3d nav-tab px-4 py-2 rounded-lg" onclick="app.setView('notes')">WORKSPACE</button>
+      <button id="tab-journal" class="chrome-metal btn-3d nav-tab px-4 py-2 rounded-lg" onclick="app.setView('journal')">JOURNAL</button>
+      <button id="tab-library" class="chrome-metal btn-3d nav-tab px-4 py-2 rounded-lg" onclick="app.setView('library')">HTML LIBRARY</button>
+      <button id="tab-sandbox" class="chrome-metal btn-3d nav-tab px-4 py-2 rounded-lg" onclick="app.setView('sandbox')">SANDBOX</button>
+      <button id="tab-adb" class="chrome-metal btn-3d nav-tab px-4 py-2 rounded-lg" onclick="app.setView('adb')">ADB DECK</button>
+      <button id="tab-setup" class="chrome-metal btn-3d nav-tab px-4 py-2 rounded-lg" onclick="app.setView('setup')">S24 SETUP</button>
+    </nav>
+
+    <main class="flex-1 overflow-hidden">
+      <section id="view-prompts" class="tab-pane p-4 md:p-6">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6">
+          <div class="panel-3d p-5 md:p-6 fade-in">
+            <div class="flex items-center justify-between gap-4 mb-5">
+              <div>
+                <h2 class="text-2xl font-bold text-white">Prompt Architect + Prompt Library</h2>
+                <p class="text-slate-400 text-sm">Merged quick prompts, generator, search, categories, and copy tools.</p>
+              </div>
+              <span class="text-xs uppercase tracking-[0.2em] text-orange-400 font-bold">Unified</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 mb-4">
+              <input id="topic" type="text" class="premium-input" placeholder="What's the topic or task?" />
+              <button id="genBtn" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3 rounded-xl transition flex items-center justify-center gap-3">
+                <span>Generate</span>
+                <div id="loader-prompt" class="loader-ring hidden"></div>
+              </button>
+            </div>
+
+            <div id="resultContainer" class="hidden mt-5 border-t border-white/10 pt-5">
+              <div class="flex items-center justify-between gap-3 mb-3">
+                <span class="text-xs uppercase tracking-[0.2em] text-blue-400 font-bold">Generated Prompt</span>
+                <div class="flex gap-2">
+                  <button id="copyBtn" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-sm font-semibold">Copy Text</button>
+                  <button id="saveBtn" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-sm font-semibold">Save to History</button>
+                </div>
+              </div>
+              <div id="result" class="inset-screen rounded-2xl p-5 text-sm code-box custom-scrollbar max-h-[340px] overflow-auto"></div>
+            </div>
+
+            <div class="mt-8">
+              <div class="flex flex-col md:flex-row gap-3 mb-4">
+                <input id="promptSearch" class="search-input" type="text" placeholder="Search prompts..." oninput="app.loadPromptLibrary()" />
+                <select id="promptCategory" onchange="app.loadPromptLibrary()">
+                  <option value="image">Image Gen</option>
+                  <option value="video">Video Gen</option>
+                  <option value="podcast">Podcast Gen</option>
+                  <option value="file">File Gen</option>
+                  <option value="generated">Generated 100</option>
+                </select>
+              </div>
+              <div id="promptList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+          </div>
+
+          <div class="panel-3d p-5 md:p-6 fade-in">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-xl font-bold">Prompt History</h3>
+              <span id="historyCountPrompt" class="text-xs bg-slate-900 px-3 py-1 rounded-full border border-white/10">0</span>
+            </div>
+            <div id="promptHistoryList" class="space-y-3 max-h-[760px] overflow-auto custom-scrollbar">
+              <div class="text-center text-slate-500 italic py-10">No saved prompts yet.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-media" class="tab-pane p-4 md:p-6 hidden-view">
+        <div class="max-w-7xl mx-auto">
+          <header class="text-center mb-8 fade-in">
+            <h2 class="text-4xl md:text-5xl font-extrabold">Lava's <span class="text-gradient">Media Maker</span></h2>
+            <p class="text-slate-400 mt-2">Prompt architect, podcast studio, and video director in one workspace.</p>
+          </header>
+
+          <div class="flex flex-wrap justify-center gap-2 mb-6">
+            <button id="tab-media-prompt" class="tab-btn active px-6 py-3 rounded-full text-sm font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white" onclick="app.switchMediaTab('prompt')">Prompt Architect</button>
+            <button id="tab-media-podcast" class="tab-btn px-6 py-3 rounded-full text-sm font-bold bg-slate-800 text-slate-300" onclick="app.switchMediaTab('podcast')">Podcast Studio</button>
+            <button id="tab-media-video" class="tab-btn px-6 py-3 rounded-full text-sm font-bold bg-slate-800 text-slate-300" onclick="app.switchMediaTab('video')">Video Director</button>
+          </div>
+
+          <div id="media-view-prompt" class="glass-card rounded-3xl overflow-hidden mb-8 fade-in">
+            <div class="p-6 md:p-8">
+              <h3 class="text-2xl font-bold mb-5">Prompt Generator</h3>
+              <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
+                <input id="media-topic" type="text" class="premium-input" placeholder="e.g., A sci-fi short story about Mars..." />
+                <button id="mediaGenBtn" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-4 rounded-xl flex items-center justify-center gap-3">
+                  <span>Generate</span>
+                  <div id="media-loader-prompt" class="loader-ring hidden"></div>
+                </button>
+              </div>
+
+              <div id="media-resultContainer" class="hidden mt-8 border-t border-white/10 pt-6">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs font-bold uppercase tracking-widest text-blue-400">Generated Prompt</span>
+                  <button id="media-copyBtn" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg text-sm font-medium">Copy Text</button>
+                </div>
+                <div id="media-result" class="inset-screen p-6 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap border border-white/5 font-mono shadow-inner"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="media-view-podcast" class="hidden-view glass-card rounded-3xl overflow-hidden mb-8 fade-in">
+            <div class="p-6 md:p-8">
+              <h3 class="text-2xl font-bold mb-5">Premium Podcast Studio</h3>
+              <div class="flex flex-col gap-3">
+                <textarea id="podcast-topic" class="premium-input h-24 resize-none" placeholder="Podcast theme, tone, aesthetic, structure..."></textarea>
+                <button id="genPodcastBtn" class="bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-500 hover:to-pink-500 text-white font-bold px-8 py-4 rounded-xl flex items-center justify-center gap-3">
+                  <span>Generate Podcast & Cover Art</span>
+                  <div id="loader-podcast" class="loader-ring hidden"></div>
+                </button>
+              </div>
+
+              <div id="resultPodcastContainer" class="hidden mt-8 border-t border-white/10 pt-8">
+                <div class="grid md:grid-cols-3 gap-8">
+                  <div>
+                    <span class="block text-xs font-bold uppercase tracking-widest text-fuchsia-400 mb-3">Cover Art & Ref</span>
+                    <div class="aspect-square rounded-2xl overflow-hidden bg-slate-900 border border-white/10 relative shadow-2xl">
+                      <img id="podcast-cover" src="" class="w-full h-full object-cover hidden" alt="Podcast Cover" />
+                      <div id="podcast-image-loader" class="absolute inset-0 flex items-center justify-center">
+                        <div class="loader-ring border-t-fuchsia-500 w-10 h-10"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="md:col-span-2">
+                    <span class="block text-xs font-bold uppercase tracking-widest text-fuchsia-400 mb-3">Episode Script & Structure</span>
+                    <div id="podcast-script" class="inset-screen p-6 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap border border-white/5 h-96 overflow-y-auto custom-scrollbar shadow-inner font-mono"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="media-view-video" class="hidden-view glass-card rounded-3xl overflow-hidden mb-8 fade-in">
+            <div class="p-6 md:p-8">
+              <h3 class="text-2xl font-bold mb-5">Pro Video Director</h3>
+              <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
+                <input id="video-topic" type="text" class="premium-input" placeholder="Minimal text to video concept..." />
+                <button id="genVideoBtn" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold px-8 py-4 rounded-xl flex items-center justify-center gap-3">
+                  <span>Direct Video</span>
+                  <div id="loader-video" class="loader-ring hidden"></div>
+                </button>
+              </div>
+
+              <div id="resultVideoContainer" class="hidden mt-8 border-t border-white/10 pt-8">
+                <span class="block text-xs font-bold uppercase tracking-widest text-indigo-400 mb-3">Storyboard Concept Frame</span>
+                <div class="w-full h-64 md:h-96 rounded-2xl overflow-hidden bg-slate-900 border border-white/10 relative shadow-2xl mb-6">
+                  <img id="video-frame" src="" class="w-full h-full object-cover hidden" alt="Video Frame" />
+                  <div id="video-image-loader" class="absolute inset-0 flex items-center justify-center">
+                    <div class="loader-ring border-t-indigo-500 w-10 h-10"></div>
+                  </div>
+                </div>
+
+                <span class="block text-xs font-bold uppercase tracking-widest text-indigo-400 mb-3">Cinematic Directives & Script</span>
+                <div id="video-script" class="inset-screen p-6 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap border border-white/5 shadow-inner font-mono"></div>
+              </div>
+            </div>
+          </div>
+
+          <section class="fade-in">
+            <div class="flex items-center justify-between mb-4 px-1">
+              <h3 class="text-2xl font-bold text-white">Artifact History</h3>
+              <span id="historyCount" class="text-sm bg-slate-800 text-fuchsia-400 px-4 py-1.5 rounded-full font-bold border border-slate-700">0</span>
+            </div>
+            <div id="historyList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="text-center py-10 text-slate-500 italic col-span-full">No media saved yet. Your creations will appear here.</div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="view-dna" class="tab-pane p-4 md:p-6 hidden-view">
+        <div class="max-w-2xl mx-auto panel-3d p-8 md:p-10 text-center space-y-6">
+          <div class="text-5xl">🧬</div>
+          <div>
+            <h2 class="text-2xl font-bold text-white">Prompt DNA Extractor</h2>
+            <p class="text-slate-400 text-sm mt-2">Upload an image to extract core composition, lighting, and reusable style attributes for prompt recreation.</p>
+          </div>
+
+          <div class="inset-screen p-8 rounded-xl border-2 border-dashed border-slate-600 relative">
+            <input type="file" id="dna-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onchange="app.extractDNA(event)" />
+            <p class="text-slate-500 font-bold uppercase tracking-widest pointer-events-none">Tap to Upload Image</p>
+          </div>
+
+          <div id="dna-processing" class="hidden space-y-4 my-6">
+            <div class="mini-loader"></div>
+            <p class="text-xs font-mono text-cyan-400 animate-pulse uppercase">Analyzing EXIF & Composition Data...</p>
+          </div>
+
+          <div id="dna-output" class="hidden inset-screen p-6 rounded-lg text-left border border-cyan-500/30">
+            <h3 class="text-xs font-bold text-cyan-400 uppercase mb-3">Extracted Prompt DNA</h3>
+            <p id="dna-result" class="text-sm font-mono text-slate-300 whitespace-pre-wrap"></p>
+            <button onclick="app.copyText(document.getElementById('dna-result').innerText, this)" class="mt-4 chrome-metal btn-3d px-4 py-2 text-[11px] rounded w-full">COPY PROMPT</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-notes" class="tab-pane hidden-view">
+        <div class="h-full flex flex-col md:flex-row p-2 md:p-3 gap-3">
+          <aside class="w-full md:w-72 panel-3d p-4 flex flex-col">
+            <button onclick="app.newNote()" class="chrome-metal btn-3d py-3 font-bold text-[11px] uppercase rounded-lg mb-4">NEW ENTRY</button>
+            <input id="noteSearch" type="text" class="search-input mb-4" placeholder="Search notes..." oninput="app.renderNotes()" />
+            <div id="note-list" class="flex-1 overflow-y-auto no-scrollbar space-y-2 pr-1"></div>
+          </aside>
+
+          <main class="flex-1 panel-3d overflow-hidden flex flex-col">
+            <div class="p-4 border-b border-white/10 flex flex-col md:flex-row gap-3 md:items-center">
+              <input type="text" id="note-title" oninput="app.saveWorkspace()" class="bg-transparent text-xl font-black text-white outline-none w-full placeholder-slate-500" placeholder="Document Name" />
+              <div class="flex gap-2">
+                <button onclick="app.exportBackup()" class="chrome-metal btn-3d px-3 py-2 rounded text-xs font-bold">Backup</button>
+                <button onclick="app.deleteActiveNote()" class="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded text-xs font-bold">Delete</button>
+              </div>
+            </div>
+
+            <div class="p-4 md:p-6 flex-1 overflow-y-auto no-scrollbar">
+              <div id="editor" class="workspace-editor inset-screen" contenteditable="true" data-placeholder="Start writing..." oninput="app.saveWorkspace()"></div>
+            </div>
+          </main>
+        </div>
+      </section>
+
+      <section id="view-journal" class="tab-pane p-4 md:p-6 hidden-view">
+        <div class="max-w-6xl mx-auto h-full flex flex-col gap-4">
+          <div class="panel-3d p-4 flex flex-wrap items-center gap-3">
+            <button id="dictate-btn" onclick="app.toggleDictation()" class="chrome-metal btn-3d text-[11px] px-4 py-2 rounded-lg">Dictate</button>
+            <button onclick="app.exportJournalTxt()" class="chrome-metal btn-3d text-[11px] px-4 py-2 rounded-lg">Export</button>
+            <button onclick="app.clearJournal()" class="chrome-metal btn-3d text-[11px] px-4 py-2 rounded-lg">Clear</button>
+            <div class="w-px h-6 bg-slate-600 mx-2"></div>
+            <button onclick="window.open('https://google.com','_blank')" class="chrome-metal btn-3d text-[11px] px-4 py-2 rounded-lg text-blue-800">Google</button>
+            <button onclick="window.open('https://developer.android.com/studio','_blank')" class="chrome-metal btn-3d text-[11px] px-4 py-2 rounded-lg text-green-800">Android Studio</button>
+            <button onclick="window.open('https://thunkable.com','_blank')" class="chrome-metal btn-3d text-[11px] px-4 py-2 rounded-lg text-purple-800">Thunkable</button>
+            <button onclick="window.open('https://kodular.io','_blank')" class="chrome-metal btn-3d text-[11px] px-4 py-2 rounded-lg text-orange-800">Kodular</button>
+          </div>
+
+          <div id="journal-editor" contenteditable="true" class="flex-1 inset-screen p-6 md:p-8 overflow-y-auto outline-none rounded-xl" style="font-size:1.1rem;" oninput="app.saveWorkspace()">Enter your thoughts, Russ...</div>
+        </div>
+      </section>
+
+      <section id="view-library" class="tab-pane p-4 md:p-6 hidden-view">
+        <div class="max-w-6xl mx-auto">
+          <div class="panel-3d p-5 md:p-6">
+            <div class="flex flex-col md:flex-row gap-3 md:items-center md:justify-between mb-5">
+              <div>
+                <h2 class="text-2xl font-bold">HTML Template Library</h2>
+                <p class="text-slate-400 text-sm">Merged starter templates from the original prompt utility app.</p>
+              </div>
+              <input id="templateSearch" type="text" class="search-input md:max-w-xs" placeholder="Search templates..." oninput="app.loadTemplates()" />
+            </div>
+            <div id="templateList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-sandbox" class="tab-pane p-4 md:p-6 hidden-view">
+        <div class="max-w-6xl mx-auto panel-3d p-5 md:p-6">
+          <div class="flex items-center justify-between gap-4 mb-4">
+            <div>
+              <h2 class="text-2xl font-bold">Live HTML Sandbox</h2>
+              <p class="text-slate-400 text-sm">Edit and preview HTML quickly, then save the code into notes.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="app.saveSandboxToNotes()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold">Save to Notes</button>
+              <button onclick="app.clearSandbox()" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold">Wipe Editor</button>
+            </div>
+          </div>
+
+          <textarea id="sandboxInput" class="premium-input code-box" style="min-height:220px;" oninput="app.runSandbox()"></textarea>
+          <div class="stats-bar">
+            <span id="lineCount">Lines: 0</span>
+            <span>Live preview updates instantly</span>
+          </div>
+
+          <div class="mt-4">
+            <div class="text-sm font-bold mb-2 text-slate-300">Preview</div>
+            <iframe id="sandbox-preview" class="w-full min-h-[320px] rounded-2xl border border-blue-500/30 bg-white"></iframe>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-adb" class="tab-pane p-4 md:p-6 hidden-view">
+        <div class="max-w-6xl mx-auto">
+          <div class="panel-3d p-5 md:p-6">
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <h2 class="text-2xl font-bold">ADB Deck</h2>
+                <p class="text-slate-400 text-sm">Tap any command to copy it.</p>
+              </div>
+              <input id="adbSearch" type="text" class="search-input max-w-xs" placeholder="Search ADB..." oninput="app.renderAdb()" />
+            </div>
+            <div id="adb-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-setup" class="tab-pane p-4 md:p-6 hidden-view">
+        <div class="max-w-6xl mx-auto setup-grid">
+          <main>
+            <div class="panel-3d p-6 mb-6">
+              <header class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-4">
+                  <div class="progress-ring" id="progressRing" style="--progress:0%;">
+                    <span class="progress-text" id="progressPct">0%</span>
+                  </div>
+                  <div>
+                    <h2 class="text-2xl font-bold text-white">S24 AI Stack Config</h2>
+                    <div id="progressCount" class="text-xs text-slate-400">0 of 0 steps done</div>
+                  </div>
+                </div>
+                <button class="chrome-metal btn-3d px-3 py-2 text-xs rounded-lg" onclick="setupApp.clearChecklist()">Clear Data</button>
+              </header>
+
+              <div class="inset-screen p-4 rounded-xl mb-6 text-sm text-slate-300">
+                <ul class="list-decimal ml-5 space-y-1">
+                  <li><strong>Navigate:</strong> select a configuration layer.</li>
+                  <li><strong>Persist:</strong> toggle completed nodes and progress saves locally.</li>
+                  <li><strong>Track:</strong> use the visual checklist for setup status.</li>
+                </ul>
+              </div>
+
+              <div id="setupTabContainer" class="flex gap-2 mb-6 overflow-x-auto pb-2"></div>
+              <div id="stepContainer" class="flex flex-col gap-4"></div>
+            </div>
+          </main>
+
+          <aside class="flex flex-col gap-6">
+            <div class="panel-3d p-6 flex justify-center">
+              <div class="phone-frame">
+                <div class="phone-notch"></div>
+                <div class="phone-screen">
+                  <div class="text-[10px] text-slate-500 my-1">Lock: <strong class="text-white">L / Perplexity</strong></div>
+                  <div class="text-[10px] text-cyan-400 my-1"><strong>Hold Side Key</strong><br>Gemini</div>
+                  <div class="text-[10px] text-purple-400 mt-2"><strong>Hi Bixby</strong><br>Device Control</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel-3d p-5">
+              <h3 class="font-bold text-white mb-3">Status Notes</h3>
+              <p class="text-sm text-slate-400">This module preserves the checklist behavior from the original workspace and keeps it offline for quick S24 configuration tracking.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="shrink-0 px-4 md:px-6 py-3 border-t border-white/10 bg-black/20 backdrop-blur-md flex items-center justify-between text-[10px] md:text-xs uppercase tracking-[0.18em] font-bold text-slate-300">
+      <div>Lava Unified Workspace · Merged Build</div>
+      <div id="save-status" class="opacity-0 transition-opacity text-white bg-green-600 px-3 py-1 rounded-md">Saved</div>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast">
+    <span id="toast-msg">Success!</span>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'LavaUnifiedWorkspace_v1';
+    const SETUP_KEY = 's24aisetup';
+    const BRAND_KEY = 'LavaBranding_v7';
+
+    const promptData = {
+      image: [
+        "Cinematic 8K, volumetric lighting, neo-noir reflections.",
+        "Macro 105mm chrome logo, depth of field.",
+        "Golden hour nature, Blue Ridge Mountains fog.",
+        "Stylized vector cyberpunk neon icon, 1:1.",
+        "3D gold-glass logo for Lavaz Life.",
+        "Found footage eerie cabin, high contrast VHS.",
+        "Anime real-mix cyberpunk girl, neon monitors.",
+        "Sci-fi corridor, holographic displays.",
+        "Premium carbon fiber phone product shot.",
+        "Minimal modern brand logo, solid background.",
+        "Cyberpunk street, rain puddles, 8k ray-tracing.",
+        "Abandoned asylum hallway, found footage grain.",
+        "Surreal floating island, volumetric clouds.",
+        "Retro 80s synthwave landscape, neon grid.",
+        "Hyper-realistic portrait, three-point lighting."
+      ],
+      video: [
+        "Pan ArchViz interior, 60fps.",
+        "Drone flyover fantasy mountain, blue hour.",
+        "Neon droid time-lapse, cyberpunk alley.",
+        "First-person horror hallway, flashlight flicker.",
+        "Slow-motion macro water splash on chrome.",
+        "Cinematic logo spin, volumetric lighting.",
+        "Restaurant kitchen rush time-lapse.",
+        "Server rack glowing, data center pan.",
+        "90s truck foggy mountain road tracking.",
+        "360 rotation neon sign, smooth motion.",
+        "Walking through Tokyo at night, POV 60fps.",
+        "Abstract liquid metal morphing, 4k."
+      ],
+      podcast: [
+        "Intro Android ADB commands.",
+        "Interview Found footage films.",
+        "Evolution 90s country music.",
+        "Basics IT networking.",
+        "Privacy Local storage benefits.",
+        "Lore Appalachian ghost stories.",
+        "News Samsung One UI features.",
+        "Tech React vs Classes.",
+        "Design AI vs Human Brand.",
+        "Guide Setting up a home lab.",
+        "Deep dive Linux kernel basics."
+      ],
+      file: [
+        "Python Auto-rename files.",
+        "JSON REST API profiles.",
+        "Batch ADB cache-reboot.",
+        "HTML Mobile note UI.",
+        "JSON Study tracker.",
+        "ADB APK backup script.",
+        "Pandas Work shift analysis.",
+        "Next.js Sidebar component.",
+        "Bash Network IP ping.",
+        "Email IT support template.",
+        "JS Local storage manager.",
+        "Python Web scraper for movies."
+      ]
+    };
+
+    function generatePrompts() {
+      const prompts = [];
+      const logos = ["RB", "LLD", "LL", "Lavaz Life"];
+      const styles = [
+        "Cinematic 8K look, volumetric lighting, ray-tracing feel",
+        "Neo-Noir, rain, neon reflections, high-contrast",
+        "Golden Hour Magic, depth of field, warm hues",
+        "Studio 3-Point Light, premium materials chrome, glass, carbon fiber"
+      ];
+
+      logos.forEach(logo => {
+        styles.forEach(style => {
+          prompts.push({
+            type: "Logo Design",
+            text: `Create a highly detailed 1:1 ratio 3D logo for ${logo}. Style: ${style}. Ensure solid or transparent background. High-contrast textures, tactile feel, mobile-friendly composition.`
+          });
+        });
+      });
+
+      const apps = [
+        "LiquidNotes text editor",
+        "Lavaz Life portfolio",
+        "Offline ADB command deck",
+        "Personal fitness tracker",
+        "Local inventory manager",
+        "Recipe database"
+      ];
+
+      const frameworks = [
+        "pure HTML/JS/CSS",
+        "React with Tailwind",
+        "a responsive PWA format",
+        "Android WebView optimized format",
+        "Material Design 3 aesthetic"
+      ];
+
+      apps.forEach(appName => {
+        frameworks.forEach(fw => {
+          prompts.push({
+            type: "App Dev",
+            text: `Generate the complete code for a fully functional ${appName} using ${fw}. Include local storage integration, dark mode toggle, and mobile Android optimization.`
+          });
+        });
+      });
+
+      const fillers = [
+        "Generate an Android Studio Java script that implements a hidden camera overlay.",
+        "Write a Python script to scrape 4K wallpapers and save them locally.",
+        "Create a futuristic 16:9 UI mockup for Lavaz Life utilizing a navy matte and silver chrome aesthetic.",
+        "Write a secure Firebase authentication rule set for a mobile application.",
+        "Design a stylized flat vector Pro Cyberpunk Neon sticker for RB."
+      ];
+
+      while (prompts.length < 100) {
+        prompts.push({
+          type: "Utility Design",
+          text: `${fillers[prompts.length % fillers.length]} Variation ${prompts.length + 1}. Focus on extreme detail, modular code/design, and best practices.`
+        });
+      }
+      return prompts;
+    }
+
+    const templates = [
+      { title: "Task Planner", code: "<div><h2>Today</h2><ul><li>Task 1</li></ul></div>" },
+      { title: "Pomodoro UI", code: "<div style='text-align:center'><h2>25:00</h2><button>Start</button></div>" },
+      { title: "Kanban", code: "<div style='display:flex;gap:5px'><div>To Do</div><div>Done</div></div>" },
+      { title: "IT Notes", code: "<div style='background:#eee;padding:10px'><h3>Topic</h3></div>" },
+      { title: "Shift Tracker", code: "<table border='1'><tr><th>Day</th><th>Shift</th></tr><tr><td>Wed</td><td>9am-9pm</td></tr></table>" },
+      { title: "Base Layout", code: "<div style='background:#007bff;padding:15px'>Header</div>" },
+      { title: "Dark Toggle", code: "<button style='background:#333;color:#fff'>Toggle</button>" },
+      { title: "Watchlist", code: "<div><h3>Movies</h3><ul><li>REC</li></ul></div>" },
+      { title: "Code Card", code: "<div style='background:#000;color:#0f0'><code>adb shell</code></div>" },
+      { title: "Contact Form", code: "<form><input><button>Send</button></form>" },
+      { title: "Price Table", code: "<table><tr><td>Plan A</td><td>$10</td></tr></table>" },
+      { title: "Profile Card", code: "<div style='border:1px solid #ccc'><h3>User Name</h3></div>" },
+      { title: "Navbar", code: "<nav><a href='#'>Home</a> <a href='#'>About</a></nav>" },
+      { title: "Footer", code: "<footer>&copy; 2026 Lava Notes</footer>" },
+      { title: "Hero Section", code: "<section><h1>Welcome</h1><p>Banner text.</p></section>" },
+      { title: "Alert Box", code: "<div style='color:red'>Warning! Error detected.</div>" },
+      { title: "Product Grid", code: "<div style='display:grid;grid-template-columns:1fr 1fr'>Item</div>" },
+      { title: "Login Page", code: "<form><input type='password'><button>Login</button></form>" },
+      { title: "Search Bar UI", code: "<div style='display:flex'><input><button>Search</button></div>" },
+      { title: "Timeline", code: "<ul><li>2025 Started</li><li>2026 Scaling</li></ul>" },
+      { title: "Rating Stars", code: "<span>⭐⭐⭐⭐☆</span>" },
+      { title: "Chat Bubble", code: "<div style='background:blue;color:white;border-radius:10px'>Hello!</div>" },
+      { title: "Progress Bar", code: "<div style='background:#ddd'><div style='width:50%;background:green'>50%</div></div>" },
+      { title: "Accordion", code: "<div><b>Details</b><p style='display:none'>Hidden info.</p></div>" },
+      { title: "Video Embed", code: "<div style='background:#000;height:100px'>Video Player</div>" },
+      { title: "Audio Player", code: "<div style='border:1px solid #333'>Play -----</div>" },
+      { title: "Badge", code: "<span style='background:red;border-radius:50%;padding:5px'>1</span>" },
+      { title: "Modal Pop", code: "<div style='position:fixed;background:#fff;color:#000'>Popup</div>" },
+      { title: "Tag Cloud", code: "<div style='display:flex;gap:5px'><span>AI</span><span>Dev</span></div>" },
+      { title: "Stat Box", code: "<div><h4>Users</h4><p>1.2k</p></div>" }
+    ];
+
+    const adbDeck = [
+      { cmd: "adb devices", desc: "List hardware" },
+      { cmd: "adb reboot recovery", desc: "Recovery mode" },
+      { cmd: "adb shell pm uninstall -k --user 0 PACKAGE_NAME", desc: "Debloat app" },
+      { cmd: "adb shell wm density 420", desc: "Set DPI S24" },
+      { cmd: "adb shell settings put global window_animation_scale 0.5", desc: "Speed up phone" },
+      { cmd: "adb logcat *:E", desc: "Error logs" },
+      { cmd: "adb shell dumpsys battery", desc: "Battery health" },
+      { cmd: "adb shell screencap -p /sdcard/screen.png", desc: "Screenshot" }
+    ];
+
+    const setupData = {
+      foundation: {
+        title: "Foundation",
+        steps: [
+          { id: "f1", primary: "Verify One UI 8.5", secondary: "Settings > Software update.", tags: ["galaxy"] },
+          { id: "f2", primary: "Enable developer options", secondary: "Tap build number seven times.", tags: ["android"] },
+          { id: "f3", primary: "Review default assistant", secondary: "Set Gemini or preferred AI assistant.", tags: ["ai"] }
+        ]
+      },
+      utilities: {
+        title: "Utilities",
+        steps: [
+          { id: "u1", primary: "Install Termux", secondary: "Use official source and update packages.", tags: ["termux"] },
+          { id: "u2", primary: "Install browser tools", secondary: "Prepare mobile GitHub and web app workflow.", tags: ["web"] },
+          { id: "u3", primary: "Prepare backups", secondary: "Create local and cloud-safe exports.", tags: ["backup"] }
+        ]
+      },
+      automation: {
+        title: "Automation",
+        steps: [
+          { id: "a1", primary: "Set app shortcuts", secondary: "Pin key AI utilities to home screen.", tags: ["ux"] },
+          { id: "a2", primary: "Tune notifications", secondary: "Reduce noise and prioritize build alerts.", tags: ["focus"] },
+          { id: "a3", primary: "Finalize workflow stack", secondary: "Validate notes, prompts, and deployment flow.", tags: ["workflow"] }
+        ]
+      }
+    };
+
+    const defaultState = {
+      notes: [],
+      activeId: null,
+      journalContent: "",
+      promptHistory: [],
+      mediaHistory: [],
+      brandingPref: "R.B Signature"
+    };
+
+    const app = {
+      state: structuredClone(defaultState),
+      currentView: "prompts",
+      currentPrompt: "",
+      currentTopic: "",
+      currentMediaPrompt: "",
+      currentMediaTab: "prompt",
+      recognition: null,
+      listening: false,
+
+      async init() {
+        await this.loadState();
+        this.bindEvents();
+        this.ensureSeedNote();
+        this.restoreBranding();
+        this.renderNotes();
+        this.loadPromptLibrary();
+        this.loadTemplates();
+        this.renderAdb();
+        this.renderPromptHistory();
+        this.renderMediaHistory();
+        this.runSandbox();
+        this.setView("prompts");
+        document.getElementById("journal-editor").innerHTML = this.state.journalContent || "Enter your thoughts, Russ...";
+        setupApp.init();
+      },
+
+      bindEvents() {
+        document.getElementById("genBtn").addEventListener("click", () => this.generatePrompt());
+        document.getElementById("copyBtn").addEventListener("click", () => this.copyText(document.getElementById("result").innerText));
+        document.getElementById("saveBtn").addEventListener("click", () => this.savePromptToHistory());
+
+        document.getElementById("mediaGenBtn").addEventListener("click", () => this.generateMediaPrompt());
+        document.getElementById("media-copyBtn").addEventListener("click", () => this.copyText(document.getElementById("media-result").innerText));
+        document.getElementById("genPodcastBtn").addEventListener("click", () => this.generatePodcast());
+        document.getElementById("genVideoBtn").addEventListener("click", () => this.generateVideo());
+
+        document.getElementById("globalSearch").addEventListener("keydown", (e) => {
+          if (e.key === "Enter") this.filterGlobal();
+        });
+      },
+
+      async loadState() {
+        try {
+          const saved = await localforage.getItem(STORAGE_KEY);
+          if (saved && typeof saved === "object") this.state = { ...structuredClone(defaultState), ...saved };
+        } catch {}
+        try {
+          const fallback = localStorage.getItem(STORAGE_KEY);
+          if (fallback) this.state = { ...structuredClone(defaultState), ...JSON.parse(fallback) };
+        } catch {}
+      },
+
+      async persist() {
+        try { await localforage.setItem(STORAGE_KEY, this.state); } catch {}
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state)); } catch {}
+        this.flashSave();
+      },
+
+      flashSave() {
+        const st = document.getElementById("save-status");
+        st.style.opacity = "1";
+        setTimeout(() => st.style.opacity = "0", 1000);
+      },
+
+      toast(msg) {
+        const toast = document.getElementById("toast");
+        document.getElementById("toast-msg").innerText = msg;
+        toast.classList.add("show");
+        clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+      },
+
+      escapeHtml(str = "") {
+        return String(str)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      },
+
+      escapeXml(str = "") {
+        return String(str)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&apos;");
+      },
+
+      copyText(text, el = null) {
+        const value = String(text || "").replaceAll("SIG", "");
+        const done = () => {
+          if (el) {
+            el.classList.add("copied");
+            setTimeout(() => el.classList.remove("copied"), 650);
+          }
+          this.toast("Copied to clipboard.");
+        };
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(value).then(done).catch(() => this.fallbackCopy(value, done));
+        } else {
+          this.fallbackCopy(value, done);
+        }
+      },
+
+      fallbackCopy(text, done) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        done();
+      },
+
+      setView(view) {
+        this.currentView = view;
+        const views = ["prompts","media","dna","notes","journal","library","sandbox","adb","setup"];
+        views.forEach(v => {
+          document.getElementById(`view-${v}`).classList.toggle("hidden-view", v !== view);
+          document.getElementById(`tab-${v}`).classList.toggle("active", v === view);
+        });
+      },
+
+      filterGlobal() {
+        const q = document.getElementById("globalSearch").value.trim().toLowerCase();
+        if (!q) {
+          this.loadPromptLibrary();
+          this.loadTemplates();
+          this.renderNotes();
+          this.renderAdb();
+          return;
+        }
+        this.setView("prompts");
+        document.getElementById("promptSearch").value = q;
+        this.loadPromptLibrary();
+        this.toast(`Global filter applied: ${q}`);
+      },
+
+      async saveBrandingPref() {
+        const pref = document.getElementById("brand-selector").value;
+        this.state.brandingPref = pref;
+        try { localStorage.setItem(BRAND_KEY, pref); } catch {}
+        await this.persist();
+        this.toast("Branding preference saved.");
+      },
+
+      restoreBranding() {
+        const pref = this.state.brandingPref || localStorage.getItem(BRAND_KEY) || "R.B Signature";
+        document.getElementById("brand-selector").value = pref;
+      },
+
+      toggleWorkMode() {
+        const btn = document.getElementById("work-mode-btn");
+        const active = document.body.classList.toggle("work-active");
+        btn.innerText = active ? "WORK MODE ON" : "WORK MODE OFF";
+        if (active) {
+          this.newNote();
+          document.getElementById("note-title").value = `Work Brief ${new Date().toLocaleDateString()}`;
+          document.getElementById("editor").innerHTML = "<h2>Russ.B Red Stag Briefing</h2><p>Focus targets, deliverables, and constraints go here.</p>";
+          this.saveWorkspace();
+        }
+      },
+
+      async generatePrompt() {
+        const topic = document.getElementById("topic").value.trim();
+        if (!topic) return this.toast("Please enter a topic first.");
+
+        const loader = document.getElementById("loader-prompt");
+        document.getElementById("genBtn").disabled = true;
+        loader.classList.remove("hidden");
+        document.getElementById("resultContainer").classList.add("hidden");
+
+        const generated =
+`Role:
+You are an elite prompt architect.
+
+Context:
+The user wants a refined prompt around: ${topic}
+
+Task:
+Create a polished, production-ready prompt with:
+- Goal.
+- Style direction.
+- Constraints.
+- Output format.
+- Variations.
+
+Constraints:
+- Mobile-friendly wording.
+- High specificity.
+- Keep it actionable.
+- Avoid fluff.
+
+Output:
+Return a clean final prompt plus 3 optional enhancement ideas.`;
+
+        setTimeout(() => {
+          this.currentPrompt = generated;
+          this.currentTopic = topic;
+          document.getElementById("result").innerText = generated;
+          document.getElementById("resultContainer").classList.remove("hidden");
+          document.getElementById("genBtn").disabled = false;
+          loader.classList.add("hidden");
+        }, 450);
+      },
+
+      async savePromptToHistory() {
+        if (!this.currentPrompt) return this.toast("Nothing to save yet.");
+        this.state.promptHistory.unshift({
+          id: `p_${Date.now()}`,
+          topic: this.currentTopic || "Untitled prompt",
+          prompt: this.currentPrompt,
+          createdAt: Date.now()
+        });
+        await this.persist();
+        this.renderPromptHistory();
+        this.toast("Prompt saved.");
+      },
+
+      getPromptHistoryItem(id) {
+        return (this.state.promptHistory || []).find(x => x.id === id);
+      },
+
+      loadPromptHistoryItem(id) {
+        const item = this.getPromptHistoryItem(id);
+        if (!item) return;
+        this.setView("prompts");
+        document.getElementById("topic").value = item.topic;
+        document.getElementById("result").innerText = item.prompt;
+        document.getElementById("resultContainer").classList.remove("hidden");
+      },
+
+      async deletePromptHistoryItem(id) {
+        this.state.promptHistory = (this.state.promptHistory || []).filter(x => x.id !== id);
+        await this.persist();
+        this.renderPromptHistory();
+        this.toast("Prompt removed.");
+      },
+
+      renderPromptHistory() {
+        const items = this.state.promptHistory || [];
+        document.getElementById("historyCountPrompt").innerText = items.length;
+        const list = document.getElementById("promptHistoryList");
+        if (!items.length) {
+          list.innerHTML = "<div class='text-center text-slate-500 italic py-10'>No saved prompts yet.</div>";
+          return;
+        }
+        list.innerHTML = items.map(item => `
+          <div class="item-card">
+            <div class="font-bold text-white">${this.escapeHtml(item.topic)}</div>
+            <div class="text-xs text-slate-500 mt-1">${new Date(item.createdAt).toLocaleString()}</div>
+            <div class="text-xs text-slate-300 mt-3 code-box line-clamp-3">${this.escapeHtml(item.prompt)}</div>
+            <div class="card-actions">
+              <button class="action-link primary" onclick="app.loadPromptHistoryItem('${item.id}')">Load</button>
+              <button class="action-link" onclick="app.copyText(app.getPromptHistoryItem('${item.id}').prompt)">Copy</button>
+              <button class="action-link danger" onclick="app.deletePromptHistoryItem('${item.id}')">Delete</button>
+            </div>
+          </div>
+        `).join("");
+      },
+
+      loadPromptLibrary() {
+        const cat = document.getElementById("promptCategory").value;
+        const query = document.getElementById("promptSearch").value.trim().toLowerCase();
+        let source = [];
+        if (cat === "generated") source = generatePrompts().map(p => `${p.type}: ${p.text}`);
+        else source = promptData[cat] || [];
+
+        const filtered = source.filter(p => p.toLowerCase().includes(query));
+        document.getElementById("promptList").innerHTML =
+          filtered.map(p => `
+            <div class="item-card">
+              <div class="text-sm text-slate-100 leading-relaxed">${this.escapeHtml(p)}</div>
+              <div class="card-actions">
+                <button class="action-link primary" onclick="app.copyText(${JSON.stringify(p)}, this)">Copy</button>
+                <button class="action-link" onclick="app.sendPromptToNotes(${JSON.stringify(p)})">Save to Note</button>
+              </div>
+            </div>
+          `).join("") || "<div class='text-slate-500 italic'>No matching prompts found.</div>";
+      },
+
+      sendPromptToNotes(text) {
+        this.newNote();
+        document.getElementById("note-title").value = "Saved Prompt";
+        document.getElementById("editor").innerText = text;
+        this.saveWorkspace();
+        this.toast("Prompt sent to workspace note.");
+      },
+
+      switchMediaTab(tabName) {
+        this.currentMediaTab = tabName;
+        ["prompt","podcast","video"].forEach(name => {
+          document.getElementById(`media-view-${name}`).classList.toggle("hidden-view", name !== tabName);
+        });
+
+        const promptBtn = document.getElementById("tab-media-prompt");
+        const podcastBtn = document.getElementById("tab-media-podcast");
+        const videoBtn = document.getElementById("tab-media-video");
+
+        promptBtn.className = tabName === "prompt"
+          ? "tab-btn active px-6 py-3 rounded-full text-sm font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white"
+          : "tab-btn px-6 py-3 rounded-full text-sm font-bold bg-slate-800 text-slate-300";
+
+        podcastBtn.className = tabName === "podcast"
+          ? "tab-btn active px-6 py-3 rounded-full text-sm font-bold bg-gradient-to-r from-fuchsia-600 to-pink-600 text-white"
+          : "tab-btn px-6 py-3 rounded-full text-sm font-bold bg-slate-800 text-slate-300";
+
+        videoBtn.className = tabName === "video"
+          ? "tab-btn active px-6 py-3 rounded-full text-sm font-bold bg-gradient-to-r from-indigo-600 to-blue-600 text-white"
+          : "tab-btn px-6 py-3 rounded-full text-sm font-bold bg-slate-800 text-slate-300";
+      },
+
+      async generateMediaPrompt() {
+        const topic = document.getElementById("media-topic").value.trim();
+        if (!topic) return this.toast("Please enter a topic first.");
+
+        const btn = document.getElementById("mediaGenBtn");
+        const loader = document.getElementById("media-loader-prompt");
+        btn.disabled = true;
+        loader.classList.remove("hidden");
+        document.getElementById("media-resultContainer").classList.add("hidden");
+
+        const generated =
+`Prompt Architect Output
+
+Topic:
+${topic}
+
+Master Prompt:
+Create a premium, cinematic result centered on "${topic}".
+Use strong visual hierarchy, exact mood cues, tactile materials, clean composition, and production-grade detail.
+Return:
+1. Core concept.
+2. Style language.
+3. Camera/composition guidance.
+4. Lighting direction.
+5. Output constraints.
+6. Three alternate takes.`;
+
+        setTimeout(() => {
+          this.currentMediaPrompt = generated;
+          document.getElementById("media-result").innerText = generated;
+          document.getElementById("media-resultContainer").classList.remove("hidden");
+          loader.classList.add("hidden");
+          btn.disabled = false;
+        }, 450);
+      },
+
+      async generatePodcast() {
+        const topic = document.getElementById("podcast-topic").value.trim();
+        if (!topic) return this.toast("Please describe the podcast theme.");
+
+        const btn = document.getElementById("genPodcastBtn");
+        const loader = document.getElementById("loader-podcast");
+        btn.disabled = true;
+        loader.classList.remove("hidden");
+
+        document.getElementById("resultPodcastContainer").classList.remove("hidden");
+        document.getElementById("podcast-cover").classList.add("hidden");
+        document.getElementById("podcast-image-loader").classList.remove("hidden");
+        document.getElementById("podcast-script").innerText = "Generating premium podcast script, segment map, and cover art direction...";
+
+        const script =
+`Podcast Blueprint
+
+Title:
+${topic} After Dark
+
+Host Persona:
+- Calm but sharp lead voice.
+- Cinematic pacing.
+- Insight-first delivery.
+
+Episode Structure:
+- Hook intro.
+- Context setup.
+- Three deep-dive segments.
+- Takeaways.
+- Outro with next episode teaser.
+
+Production Notes:
+- Moody score.
+- Tight transitions.
+- Branded cold open.
+- Visual cover should use strong central iconography and premium contrast.`;
+
+        const svg = `
+<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='1200'>
+<defs>
+<linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+<stop offset='0%' stop-color='#7c3aed'/>
+<stop offset='50%' stop-color='#ec4899'/>
+<stop offset='100%' stop-color='#111827'/>
+</linearGradient>
+</defs>
+<rect width='100%' height='100%' fill='url(#g)'/>
+<circle cx='600' cy='420' r='210' fill='rgba(255,255,255,0.08)'/>
+<text x='600' y='520' font-size='110' text-anchor='middle' fill='white' font-family='Outfit' font-weight='800'>PODCAST</text>
+<text x='600' y='620' font-size='40' text-anchor='middle' fill='#fbcfe8' font-family='Outfit'>${this.escapeXml(topic.slice(0,34))}</text>
+</svg>`;
+        const imgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+
+        setTimeout(async () => {
+          document.getElementById("podcast-script").innerText = script;
+          const img = document.getElementById("podcast-cover");
+          img.src = imgUrl;
+          img.classList.remove("hidden");
+          document.getElementById("podcast-image-loader").classList.add("hidden");
+          loader.classList.add("hidden");
+          btn.disabled = false;
+
+          this.state.mediaHistory.unshift({
+            id:`m_${Date.now()}`,
+            type:"podcast",
+            topic,
+            prompt:script,
+            image:imgUrl,
+            createdAt:Date.now()
+          });
+          await this.persist();
+          this.renderMediaHistory();
+          this.toast("Podcast artifact created.");
+        }, 700);
+      },
+
+      async generateVideo() {
+        const topic = document.getElementById("video-topic").value.trim();
+        if (!topic) return this.toast("Please enter a concept.");
+
+        const btn = document.getElementById("genVideoBtn");
+        const loader = document.getElementById("loader-video");
+        btn.disabled = true;
+        loader.classList.remove("hidden");
+
+        document.getElementById("resultVideoContainer").classList.remove("hidden");
+        document.getElementById("video-frame").classList.add("hidden");
+        document.getElementById("video-image-loader").classList.remove("hidden");
+        document.getElementById("video-script").innerText = "Directing AI logic, defining camera angles, lighting, and cinematic sequences...";
+
+        const script =
+`Video Direction Script
+
+Concept:
+${topic}
+
+Visual Tone:
+- Cinematic.
+- High contrast.
+- Rich atmosphere.
+- Tactile materials and selective highlights.
+
+Shot List:
+1. Establishing scene with slow push-in.
+2. Mid shot with environmental movement.
+3. Detail close-up for texture and emotion.
+4. Wide reveal with dynamic lighting change.
+5. Closing hero frame.
+
+Audio:
+- Low ambient bed.
+- Accent impacts.
+- Final reverb tail.
+
+Camera:
+- Mix of dolly, pan, close-up, and held atmospheric shots.`;
+
+        const svg = `
+<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'>
+<defs>
+<linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+<stop offset='0%' stop-color='#1e1b4b'/>
+<stop offset='50%' stop-color='#4f46e5'/>
+<stop offset='100%' stop-color='#0f172a'/>
+</linearGradient>
+</defs>
+<rect width='100%' height='100%' fill='url(#g)'/>
+<rect x='100' y='120' width='1400' height='660' rx='40' fill='rgba(255,255,255,0.06)' stroke='rgba(255,255,255,0.18)'/>
+<text x='800' y='420' font-size='92' text-anchor='middle' fill='white' font-family='Outfit' font-weight='800'>VIDEO FRAME</text>
+<text x='800' y='520' font-size='36' text-anchor='middle' fill='#c7d2fe' font-family='Outfit'>${this.escapeXml(topic.slice(0,48))}</text>
+</svg>`;
+        const imgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+
+        setTimeout(async () => {
+          document.getElementById("video-script").innerText = script;
+          const img = document.getElementById("video-frame");
+          img.src = imgUrl;
+          img.classList.remove("hidden");
+          document.getElementById("video-image-loader").classList.add("hidden");
+          loader.classList.add("hidden");
+          btn.disabled = false;
+
+          this.state.mediaHistory.unshift({
+            id:`m_${Date.now()}`,
+            type:"video",
+            topic,
+            prompt:script,
+            image:imgUrl,
+            createdAt:Date.now()
+          });
+          await this.persist();
+          this.renderMediaHistory();
+          this.toast("Video artifact created.");
+        }, 700);
+      },
+
+      getMediaItem(id) {
+        return (this.state.mediaHistory || []).find(x => x.id === id);
+      },
+
+      viewMediaItem(id) {
+        const item = this.getMediaItem(id);
+        if (!item) return;
+        this.setView("media");
+        this.switchMediaTab(item.type);
+
+        if (item.type === "podcast") {
+          document.getElementById("podcast-topic").value = item.topic;
+          document.getElementById("podcast-script").innerText = item.prompt;
+          document.getElementById("resultPodcastContainer").classList.remove("hidden");
+          if (item.image) {
+            document.getElementById("podcast-cover").src = item.image;
+            document.getElementById("podcast-cover").classList.remove("hidden");
+            document.getElementById("podcast-image-loader").classList.add("hidden");
+          }
+        }
+
+        if (item.type === "video") {
+          document.getElementById("video-topic").value = item.topic;
+          document.getElementById("video-script").innerText = item.prompt;
+          document.getElementById("resultVideoContainer").classList.remove("hidden");
+          if (item.image) {
+            document.getElementById("video-frame").src = item.image;
+            document.getElementById("video-frame").classList.remove("hidden");
+            document.getElementById("video-image-loader").classList.add("hidden");
+          }
+        }
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      },
+
+      renderMediaHistory() {
+        const items = this.state.mediaHistory || [];
+        document.getElementById("historyCount").innerText = items.length;
+        const list = document.getElementById("historyList");
+
+        if (!items.length) {
+          list.innerHTML = "<div class='text-center py-10 text-slate-500 italic col-span-full'>No media saved yet. Your creations will appear here.</div>";
+          return;
+        }
+
+        list.innerHTML = items.map(item => {
+          const icon = item.type === "video" ? "🎬" : "🎙️";
+          const color = item.type === "video" ? "text-indigo-400" : "text-fuchsia-400";
+          return `
+            <div class="glass-card p-5 rounded-2xl flex flex-col">
+              <div class="flex justify-between items-start mb-3 gap-3">
+                <h3 class="font-bold text-white text-sm truncate pr-4 flex items-center gap-2">
+                  <span class="${color}">${icon}</span> ${this.escapeHtml(item.topic)}
+                </h3>
+                <span class="text-[10px] text-slate-500 font-mono whitespace-nowrap bg-slate-900 px-2 py-1 rounded-md">${new Date(item.createdAt).toLocaleDateString()}</span>
+              </div>
+              <p class="text-slate-400 text-xs line-clamp-3 mb-4 font-mono">${this.escapeHtml(item.prompt)}</p>
+              <div class="mt-auto flex justify-end gap-2">
+                <button class="text-slate-300 hover:text-white text-xs font-bold bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700" onclick="app.viewMediaItem('${item.id}')">Review Content</button>
+                <button class="text-slate-300 hover:text-white text-xs font-bold bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700" onclick="app.copyText(app.getMediaItem('${item.id}').prompt)">Copy</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      },
+
+      extractDNA(event) {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        document.getElementById("dna-processing").classList.remove("hidden");
+        document.getElementById("dna-output").classList.add("hidden");
+
+        const styles = ["Cinematic 8K", "Neo-Noir", "Golden Hour Magic", "Studio 3-Point Light"];
+        const randomStyle = styles[Math.floor(Math.random() * styles.length)];
+        const seed = Math.floor(Math.random() * 99999999);
+
+        setTimeout(() => {
+          document.getElementById("dna-processing").classList.add("hidden");
+          document.getElementById("dna-output").classList.remove("hidden");
+          document.getElementById("dna-result").innerText =
+`Base Subject Detected: Abstract / Unspecified
+Composition: ${randomStyle}, volumetric lighting, ray-tracing feel, high-contrast materials.
+Textures: Tactile, premium chrome / glass / carbon.
+Seed: ${seed}
+Ratio: Original image aspect
+Rebuild Prompt Hint: Preserve dominant focal subject, cinematic depth, and material realism.`;
+        }, 1200);
+      },
+
+      ensureSeedNote() {
+        if (!this.state.notes.length) {
+          const id = `n_${Date.now()}`;
+          this.state.notes.push({
+            id,
+            title: "Welcome",
+            content: "<h2>Lava Unified Workspace</h2><p>Your merged note system is ready.</p>"
+          });
+          this.state.activeId = id;
+          this.persist();
+        }
+        if (!this.state.activeId && this.state.notes[0]) this.state.activeId = this.state.notes[0].id;
+        this.selectNote(this.state.activeId);
+      },
+
+      newNote() {
+        const id = `n_${Date.now()}`;
+        this.state.notes.unshift({ id, title:"New Entry", content:"" });
+        this.state.activeId = id;
+        this.renderNotes();
+        this.selectNote(id);
+        this.persist();
+      },
+
+      selectNote(id) {
+        this.state.activeId = id;
+        const note = this.state.notes.find(n => n.id === id);
+        if (!note) return;
+        document.getElementById("note-title").value = note.title || "";
+        document.getElementById("editor").innerHTML = note.content || "";
+        this.renderNotes();
+      },
+
+      renderNotes() {
+        const q = document.getElementById("noteSearch")?.value?.trim().toLowerCase() || "";
+        const notes = this.state.notes.filter(n =>
+          !q ||
+          (n.title || "").toLowerCase().includes(q) ||
+          (n.content || "").toLowerCase().includes(q)
+        );
+
+        document.getElementById("note-list").innerHTML = notes.map(n => `
+          <div onclick="app.selectNote('${n.id}')" class="p-3 rounded-lg cursor-pointer text-xs font-bold uppercase tracking-wider ${n.id === this.state.activeId ? 'chrome-metal text-black shadow-md' : 'inset-screen text-slate-400 hover:brightness-125'}">
+            ${this.escapeHtml(n.title || 'Untitled')}
+          </div>
+        `).join("");
+      },
+
+      async saveWorkspace() {
+        const active = this.state.notes.find(n => n.id === this.state.activeId);
+        if (active) {
+          active.title = document.getElementById("note-title").value || "Untitled";
+          active.content = document.getElementById("editor").innerHTML;
+        }
+        this.state.journalContent = document.getElementById("journal-editor").innerHTML;
+        await this.persist();
+        this.renderNotes();
+      },
+
+      async deleteActiveNote() {
+        if (!this.state.activeId) return;
+        if (!confirm("Delete this note?")) return;
+        this.state.notes = this.state.notes.filter(n => n.id !== this.state.activeId);
+        this.state.activeId = this.state.notes[0]?.id || null;
+
+        if (!this.state.notes.length) this.newNote();
+        else {
+          this.selectNote(this.state.activeId);
+          await this.persist();
+        }
+        this.toast("Note deleted.");
+      },
+
+      async exportBackup() {
+        const blob = new Blob([JSON.stringify(this.state, null, 2)], { type:"application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "LavaUnifiedWorkspaceBackup.json";
+        a.click();
+        URL.revokeObjectURL(a.href);
+        this.toast("Backup exported.");
+      },
+
+      exportJournalTxt() {
+        const content = document.getElementById("journal-editor").innerText;
+        const blob = new Blob([content], { type:"text/plain" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "journal.txt";
+        a.click();
+        URL.revokeObjectURL(a.href);
+        this.toast("Journal exported.");
+      },
+
+      clearJournal() {
+        if (!confirm("Clear journal content?")) return;
+        document.getElementById("journal-editor").innerHTML = "";
+        this.saveWorkspace();
+        this.toast("Journal cleared.");
+      },
+
+      toggleDictation() {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) return this.toast("Speech dictation is not supported on this device.");
+
+        if (!this.recognition) {
+          this.recognition = new SR();
+          this.recognition.lang = "en-US";
+          this.recognition.interimResults = true;
+          this.recognition.continuous = true;
+
+          this.recognition.onresult = (event) => {
+            let text = "";
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              text += event.results[i][0].transcript + " ";
+            }
+            const el = document.getElementById("journal-editor");
+            el.innerText += text;
+            this.saveWorkspace();
+          };
+
+          this.recognition.onend = () => {
+            if (this.listening) this.recognition.start();
+          };
+        }
+
+        const btn = document.getElementById("dictate-btn");
+        if (!this.listening) {
+          this.listening = true;
+          this.recognition.start();
+          btn.innerText = "Listening...";
+          this.toast("Dictation started.");
+        } else {
+          this.listening = false;
+          this.recognition.stop();
+          btn.innerText = "Dictate";
+          this.toast("Dictation stopped.");
+        }
+      },
+
+      loadTemplates() {
+        const q = (document.getElementById("templateSearch")?.value || "").trim().toLowerCase();
+        const filtered = templates.filter(t =>
+          !q || t.title.toLowerCase().includes(q) || t.code.toLowerCase().includes(q)
+        );
+
+        document.getElementById("templateList").innerHTML = filtered.map(t => `
+          <div class="item-card">
+            <div class="font-bold text-white mb-2">${this.escapeHtml(t.title)}</div>
+            <code class="text-xs text-slate-300 code-box block">${this.escapeHtml(t.code.slice(0,180))}${t.code.length > 180 ? "..." : ""}</code>
+            <div class="card-actions">
+              <button class="action-link primary" onclick="app.copyText(${JSON.stringify(t.code)}, this)">Copy Full Template</button>
+              <button class="action-link" onclick="app.sendTemplateToSandbox(${JSON.stringify(t.code)})">Open in Sandbox</button>
+            </div>
+          </div>
+        `).join("") || "<div class='text-slate-500 italic'>No templates found.</div>";
+      },
+
+      sendTemplateToSandbox(code) {
+        this.setView("sandbox");
+        document.getElementById("sandboxInput").value = code;
+        this.runSandbox();
+        this.toast("Template loaded into sandbox.");
+      },
+
+      runSandbox() {
+        const code = document.getElementById("sandboxInput").value || "";
+        document.getElementById("sandbox-preview").srcdoc = code;
+        document.getElementById("lineCount").innerText = `Lines: ${code ? code.split('\\n').length : 0}`;
+      },
+
+      clearSandbox() {
+        document.getElementById("sandboxInput").value = "";
+        this.runSandbox();
+      },
+
+      saveSandboxToNotes() {
+        const code = document.getElementById("sandboxInput").value.trim();
+        if (!code) return this.toast("Sandbox is empty.");
+        this.newNote();
+        document.getElementById("note-title").value = "Sandbox Export";
+        document.getElementById("editor").innerText = code;
+        this.saveWorkspace();
+        this.toast("Sandbox code saved to notes.");
+      },
+
+      renderAdb() {
+        const q = (document.getElementById("adbSearch")?.value || "").trim().toLowerCase();
+        document.getElementById("adb-list").innerHTML = adbDeck
+          .filter(a => !q || a.cmd.toLowerCase().includes(q) || a.desc.toLowerCase().includes(q))
+          .map(a => `
+            <div onclick="app.copyText(${JSON.stringify(a.cmd)}, this)" class="panel-3d p-4 cursor-pointer hover:brightness-125 transition">
+              <code class="text-blue-400 font-bold text-xs">${this.escapeHtml(a.cmd)}</code>
+              <p class="text-[10px] text-slate-400 mt-2 uppercase font-black">${this.escapeHtml(a.desc)}</p>
+            </div>
+          `).join("");
+      }
+    };
+
+    const setupApp = {
+      state: {},
+      currentTab: "foundation",
+
+      init() {
+        try { this.state = JSON.parse(localStorage.getItem(SETUP_KEY) || "{}"); }
+        catch { this.state = {}; }
+        this.renderTabs();
+        this.renderSteps();
+        this.updateProgress();
+      },
+
+      save() {
+        localStorage.setItem(SETUP_KEY, JSON.stringify(this.state));
+        this.updateProgress();
+      },
+
+      toggleStep(id) {
+        this.state[id] = !this.state[id];
+        this.save();
+        this.renderSteps();
+      },
+
+      setTab(tabKey) {
+        this.currentTab = tabKey;
+        this.renderTabs();
+        this.renderSteps();
+      },
+
+      clearChecklist() {
+        if (!confirm("Wipe setup data?")) return;
+        this.state = {};
+        this.save();
+        this.renderSteps();
+      },
+
+      updateProgress() {
+        let total = 0, checked = 0;
+        Object.values(setupData).forEach(section => {
+          section.steps.forEach(step => {
+            total++;
+            if (this.state[step.id]) checked++;
+          });
+        });
+
+        const pct = total === 0 ? 0 : Math.round((checked / total) * 100);
+        document.getElementById("progressPct").innerText = `${pct}%`;
+        document.getElementById("progressCount").innerText = `${checked} of ${total} steps done`;
+        document.getElementById("progressRing").style.setProperty("--progress", `${pct}%`);
+      },
+
+      renderTabs() {
+        const container = document.getElementById("setupTabContainer");
+        container.innerHTML = "";
+        Object.entries(setupData).forEach(([key, data]) => {
+          const btn = document.createElement("button");
+          btn.className = `chrome-metal btn-3d px-4 py-2 text-xs rounded-md ${this.currentTab === key ? 'text-blue-800' : 'text-gray-700'}`;
+          btn.innerText = data.title;
+          btn.onclick = () => this.setTab(key);
+          container.appendChild(btn);
+        });
+      },
+
+      renderSteps() {
+        const container = document.getElementById("stepContainer");
+        container.innerHTML = "";
+        setupData[this.currentTab].steps.forEach(step => {
+          const isChecked = !!this.state[step.id];
+          const card = document.createElement("div");
+          card.className = `panel-3d step-card ${isChecked ? 'checked' : ''}`;
+          card.innerHTML = `
+            <div class="flex gap-4 p-5">
+              <div class="checkbox-wrapper pt-1">
+                <input type="checkbox" ${isChecked ? 'checked' : ''}>
+              </div>
+              <div class="flex-1">
+                <div class="font-bold text-white mb-1">${app.escapeHtml(step.primary)}</div>
+                <div class="text-xs text-slate-400 mb-2">${app.escapeHtml(step.secondary)}</div>
+                <div class="flex flex-wrap gap-2">
+                  ${(step.tags || []).map(tag => `<span class="text-[10px] px-2 py-1 rounded-full bg-slate-900 border border-white/10 text-slate-300 uppercase">${app.escapeHtml(tag)}</span>`).join("")}
+                </div>
+              </div>
+            </div>
+          `;
+          const input = card.querySelector("input");
+          input.addEventListener("change", () => this.toggleStep(step.id));
+          card.addEventListener("click", (e) => {
+            if (e.target.tagName !== "INPUT") this.toggleStep(step.id);
+          });
+          container.appendChild(card);
+        });
+      }
+    };
+
+    window.app = app;
+    window.setupApp = setupApp;
+    window.addEventListener("DOMContentLoaded", () => app.init());
+  </script>
+</body>
+</html>
